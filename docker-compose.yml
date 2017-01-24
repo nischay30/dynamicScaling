@@ -8,11 +8,14 @@ services:
   web:
     build: ./web/client
     image: web
+    links:
+     - redis
     ports:
       - 9000:9000
   redis:
     image: redis
+    command: redis-server /usr/local/etc/redis/redis.conf
     volumes:
       - ./redis.conf:/usr/local/etc/redis/redis.conf
     ports:
-      - 6380:6379
+      - 6379:6379

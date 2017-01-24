@@ -1,7 +1,5 @@
 
 import io from 'socket.io-client';
-let socket = io(`http://localhost:9000`);
-
 import React, { Component } from 'react';
 import Paper from 'material-ui/Paper';
 import Divider from 'material-ui/Divider';
@@ -46,13 +44,16 @@ class App extends Component {
     super(props);
 
     this.state = {
+      replicas: '',
+      workers:'-',
       open: false,
       frequency:'',
       delay:'',
       max: '',
       min:'',
       instances:'',
-
+      workload: '-',
+      socket: ''
     };
   }
 
@@ -71,7 +72,7 @@ class App extends Component {
     });
     
   
-    socket.emit('sending',{passFrequency:this.state.frequency,processingDelay:this.state.delay, Max_Threshold:this.state.max, Min_Threshold: this.state.min, Min_Instances: this.state.instances} );
+    this.state.socket.emit('sending',{passFrequency:this.state.frequency,processingDelay:this.state.delay, Max_Threshold:this.state.max, Min_Threshold: this.state.min, Min_Instances: this.state.instances} );
     console.log("Setted"+this.state.frequency);
   };
 
@@ -110,11 +111,30 @@ handleChangeInstances = (event, value4) => {
   console.log("Min_Instances:"+this.state.instances);
 }
 
+handleReplicaNumber = (event) => {
+  this.setState({replicas: event.target.value});
+}
 
 componentDidMount() {
     // TODO: All socket.on's should appear here.
     // Remember, not to write any functions here.
-    var socket = io();
+    // var socket = io();
+    let socket = io();
+    socket.on('workload', this.handleWorkload.bind(this));
+    socket.on('workers', this.handleWorkers.bind(this));
+    this.setState({socket});
+ }
+ handleWorkers(workers) {
+  this.setState({workers});
+ }
+
+ handleWorkload(workload) {
+  this.setState({workload});
+ }
+
+ submitReplicaNumber(replicaNumber) {
+  console.log('Replicas Required:', replicaNumber);
+  this.state.socket.emit('replicas', replicaNumber);
  }
 
 
@@ -125,14 +145,14 @@ componentDidMount() {
      <div style={{textAlign: 'center',color: 'white', marginLeft: '1%',float:'left', paddingTop: 5, width: '48%'}}> 
      <h2> Workload </h2>
       <Paper style={circle} zDepth={1} circle={true} >
-      <h6> 200 </h6>
+      <h6> {this.state.workload} </h6>
       </Paper>
      </div>
 
      <div style={{textAlign: 'center',color: 'white', marginRignt:'1%',float:'left', paddingTop: 5, width: '48%'}}> 
      <h2> Workers </h2>
       <Paper style={circle} zDepth={1} circle={true} >
-      <h6> 150 </h6>
+      <h6> {this.state.workers} </h6>
       </Paper>
      </div>
 
@@ -141,15 +161,30 @@ componentDidMount() {
 
     <Divider />
     <Paper style={styles} zDepth={1}>
-    <div style={{color: '#006064', marginLeft: 170,float:'left', paddingTop: 40, width: '40%'}} >
+    <div style={{color: '#006064', float:'left', paddingTop: 40, width: '33%'}} >
    <TextField
       floatingLabelText ="Frequency"
       value={this.state.frequency}
       onChange={this.handleChangeFrequency}/>msgs/s
     </div>
   
+
+    <div style={{color: '#006064', float:'right', paddingTop:40, width: '33%'}} >
+
+    <TextField
+    floatingLabelText="No. of Replicas"
+    value1={this.state.replicas}
+    onChange={this.handleReplicaNumber}/>
+
+    <RaisedButton
+    primary = {true}
+    label='Go'
+    onTouchTap = {this.submitReplicaNumber.bind(this, this.state.replicas)}
+    />
+    <br />
+    </div>
     
-    <div style={{color: '#006064',marginLeft: 70, float:'right', paddingTop:40, width: '40%'}} >
+    <div style={{color: '#006064', float:'right', paddingTop:40, width: '33%'}} >
 
     <TextField
     floatingLabelText="Processing Delay"
@@ -159,8 +194,8 @@ componentDidMount() {
     <br />
     </div>
 
-    <div style={{color: '#006064', float:'right', paddingTop:40, width: '33%'}} >
 
+    <div style={{color: '#006064', float:'right', paddingTop:40, width: '33%'}} >
     <TextField
     floatingLabelText="Min_Threshold"
     value3={this.state.min}
