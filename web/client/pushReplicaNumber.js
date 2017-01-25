@@ -1,4 +1,4 @@
-const client = require('./redisClient');
+const client = require('./redisClient').duplicate();
 
 function pushReplicaNumber(replicaNumber) {
 	client.lpush('replicaList', replicaNumber, (err, res) => {

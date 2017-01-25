@@ -5,6 +5,7 @@ const io = require('socket.io')(http);
 const path = require('path');
 const dynamicScaling = require('./producer')
 const pushReplicaNumber = require('./pushReplicaNumber');
+const client = require('./redisClient').duplicate();
 
 // socket.on("Update Producer");
 
@@ -13,8 +14,13 @@ app.use(express.static(path.join(__dirname, 'build')));
 //const server = http.createServer(app);
 //io(server);
 io.on('connection', function(socket){
-	console.log("connected")
     let workers = 1;
+    client.subscribe('currentWorkers');
+    client.on('message', (channerl, workerNumber) => {
+        workers = workerNumber;
+        socket.emit('workers', workers);
+    });
+	console.log("connected")
     socket.on('replicas', (replicaNumber) => {
         workers = replicaNumber;
         socket.emit('workers', workers);
