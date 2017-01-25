@@ -13,13 +13,14 @@ function createWorker(workerInstances, callback) {
 	});
 
 	worker.on('close', (data) => {
-		callback(null);
+		callback(null, workers);
 	});
 }
 
 module.exports = {
 	setWorkerForUI: function (workerCount, callback) {
 		workers = workerCount;
+		console.log('Worker Count', workerCount);
 		createWorker(workers, callback);
 	},
 	addWorker: function(workerInstancesToAdd, callback) {
@@ -28,7 +29,13 @@ module.exports = {
 	},
 	deleteWorker: function(workerInstancesToDelete, callback) {
 		workers = workers - workerInstancesToDelete;
-		createWorker(workers, callback);
+		if(workers != 0) {
+			createWorker(workers, callback);			
+		}
+		else {
+			workers = workers + workerInstancesToDelete;
+			callback(null, workers);
+		}
 	}
 }
 
